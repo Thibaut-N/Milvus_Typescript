@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - essaie `node -v` et `npm -v`.
-- et si ça passe: `npm install`
+- et si ça passe: `npm install` ou peut être bien `pnpm install` d'ailleur...
 - faut mettre des credentials valides dans `config.serverless.js`
 - et si ça, ça passe, alors: `npx ts-node server.ts`
 
