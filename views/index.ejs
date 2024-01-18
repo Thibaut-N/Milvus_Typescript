@@ -1,59 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Webapp</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1.5.11/css/pico.min.css">
-</head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@1.5.11/css/pico.min.css"
+    />
+  </head>
 
-<body>
+  <body>
     <main class="container">
-        <header class="container">
-            <h2 style="color:#3b89d1;">Milvus / NodeJS / TypeScript / pnpm / pico.css</h2>
-            <p>Collection Name: <%= COLLECTION_NAME %>
-            </p>
-            <p>Path Test: <%= PATH_TEST %>
-            </p>
-            <button id="myButton">Search</button>
-        </header>
-        <article>
-            <div id="message"></div>
-        </article>
+      <header class="container">
+        <h2 style="color: #3b89d1">
+          Milvus / NodeJS / TypeScript / pnpm / pico.css
+        </h2>
+        <p>Collection Name: <%= COLLECTION_NAME %></p>
+        <p>Path Test: <%= PATH_TEST %></p>
+        <button id="searchButton">Search</button>
+        <button id="queryButton">Query</button>
+      </header>
+      <p>
+        recherche (search) dans milvus, pour obtenir les 3 vecteurs les plus
+        proches du vecteur d'artichaut.mp3
+      </p>
+      <article>
+        <div id="message"></div>
+      </article>
+      <p>
+        Requete (query) dans milvus pour obtenir le vecteur de artichaut.mp3 à
+        partir de son chemin
+      </p>
+      <article>
+        <div id="queryResult"></div>
+      </article>
     </main>
     <script>
-        const vectorTest = JSON.parse('<%- JSON.stringify(VECTOR_TEST) %>');
+      const vectorTest = JSON.parse("<%- JSON.stringify(VECTOR_TEST) %>");
 
-        document.getElementById('myButton').addEventListener('click', function () {
-            fetch('/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ vector: vectorTest })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const messageElement = document.getElementById('message');
-                    messageElement.textContent = '';
+      document
+        .getElementById("searchButton")
+        .addEventListener("click", function () {
+          fetch("/search", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ vector: vectorTest }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              const messageElement = document.getElementById("message");
+              messageElement.textContent = "";
 
-                    if (data.paths) {
-
-                        data.paths.forEach(path => {
-                            const p = document.createElement('p');
-                            p.textContent = path;
-                            messageElement.appendChild(p);
-                        });
-                    } else {
-                        messageElement.textContent = data.message;
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
+              if (data.paths) {
+                data.paths.forEach((path) => {
+                  const p = document.createElement("p");
+                  p.textContent = path;
+                  messageElement.appendChild(p);
                 });
+              } else {
+                messageElement.textContent = data.message;
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+
+      document
+        .getElementById("queryButton")
+        .addEventListener("click", function () {
+          fetch("/query", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ path: "<%= PATH_TEST %>" }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              const queryResultDiv = document.getElementById("queryResult");
+              queryResultDiv.textContent = "";
+
+              if (data.paths) {
+                data.paths.forEach((path) => {
+                  const p = document.createElement("p");
+                  p.textContent = path;
+                  queryResultDiv.appendChild(p);
+                });
+              } else {
+                queryResultDiv.textContent = data.message;
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
         });
     </script>
-</body>
-
+  </body>
 </html>

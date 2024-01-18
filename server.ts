@@ -8,6 +8,7 @@ import path from "path";
 const data = JSON.parse(
   fs.readFileSync(path.join(__dirname, "public/artichaut.json"), "utf8")
 );
+
 const VECTOR_TEST = data.embedding;
 const PATH_TEST = data.path;
 const COLLECTION_NAME = "embeddings_512";
@@ -35,17 +36,44 @@ const client = new MilvusClient({
 });
 console.info(`Success!`);
 
-
 app.get("/", (req, res) => {
   res.render("index", { COLLECTION_NAME, PATH_TEST, VECTOR_TEST });
 });
+
+app.post("/query", async (req, res) => {
+  console.log(req.body.path);
+  console.log("thisis the pathtest", PATH_TEST)
+  try {
+   console.time('Query time');
+   const queryResults = await client.query({
+     collection_name: COLLECTION_NAME,
+     filter: `path == "${PATH_TEST}"`,
+     output_fields: ['embedding'],
+     limit: 1,
+   });
+   console.timeEnd('Query time');
+   console.log('test02', queryResults.data[0].embedding);
+   const mini_embedding = queryResults.data[0].embedding.slice(0, 5);
+
+   if (queryResults.data && queryResults.data.length > 0) {
+     const paths = [
+      mini_embedding,
+     ];
+     res.json({ paths }); // Send the paths to the client
+   } else {
+     res.json({ message: "No results found" });
+   }
+  } catch (error) {
+   console.error(error);
+   res.status(500).send('An error occurred');
+  }
+ });
 
 app.post("/search", async (req, res) => {
   console.log(req.body.path);
   const vector = req.body.vector;
 
-  (async () => {
-
+  try {
     console.time(`Searching vector`);
     const search_params = {
       metric_type: "L2",
@@ -57,20 +85,23 @@ app.post("/search", async (req, res) => {
       collection_name: COLLECTION_NAME,
       vector: VECTOR_TEST,
       output_fields: ["path", "embedding"],
-      limit: 3,
+      limit: 4,
     });
     console.timeEnd(`Searching vector`);
     if (searchResults.results && searchResults.results.length >= 3) {
       const paths = [
-        searchResults.results[0].path,
         searchResults.results[1].path,
-        searchResults.results[2].path
+        searchResults.results[2].path,
+        searchResults.results[3].path,
       ];
-      res.json({ paths }); 
+      res.json({ paths });
     } else {
       res.json({ message: "Not enough search results" });
     }
-  })();
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
 });
 
 app.listen(port, () => {
